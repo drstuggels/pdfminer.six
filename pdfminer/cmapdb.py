@@ -308,7 +308,7 @@ class CMapParser(PSStackParser[PSKeyword]):
     KEYWORD_BEGINNOTDEFRANGE = KWD(b"beginnotdefrange")
     KEYWORD_ENDNOTDEFRANGE = KWD(b"endnotdefrange")
 
-    def do_keyword(self, pos: int, token: PSKeyword) -> None:
+    def do_keyword(self, pos: int, token: PSKeyword, instruction_index: int = None) -> None:
         """ToUnicode CMaps
 
         See Section 5.9.2 - ToUnicode CMaps of the PDF Reference.
