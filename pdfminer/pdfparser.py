@@ -52,7 +52,7 @@ class PDFParser(PSStackParser[Union[PSKeyword, PDFStream, PDFObjRef, None]]):
     KEYWORD_XREF = KWD(b"xref")
     KEYWORD_STARTXREF = KWD(b"startxref")
 
-    def do_keyword(self, pos: int, token: PSKeyword) -> None:
+    def do_keyword(self, pos: int, token: PSKeyword, instruction_index: int = None) -> None:
         """Handles PDF-related keywords."""
         if token in (self.KEYWORD_XREF, self.KEYWORD_STARTXREF):
             self.add_results(*self.pop(1))
@@ -145,7 +145,7 @@ class PDFStreamParser(PDFParser):
 
     KEYWORD_OBJ = KWD(b"obj")
 
-    def do_keyword(self, pos: int, token: PSKeyword) -> None:
+    def do_keyword(self, pos: int, token: PSKeyword, instruction_index: int = None) -> None:
         if token is self.KEYWORD_R:
             # reference to indirect object
             (_, _object_id), _ = self.pop(2)

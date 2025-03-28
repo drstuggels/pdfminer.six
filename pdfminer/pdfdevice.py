@@ -94,6 +94,7 @@ class PDFDevice:
         seq: PDFTextSeq,
         ncs: PDFColorSpace,
         graphicstate: "PDFGraphicState",
+        instruction_index: int = None
     ) -> None:
         pass
 
@@ -105,6 +106,7 @@ class PDFTextDevice(PDFDevice):
         seq: PDFTextSeq,
         ncs: PDFColorSpace,
         graphicstate: "PDFGraphicState",
+        instruction_index: int = None
     ) -> None:
         assert self.ctm is not None
         matrix = utils.mult_matrix(textstate.matrix, self.ctm)
@@ -132,6 +134,7 @@ class PDFTextDevice(PDFDevice):
                 dxscale,
                 ncs,
                 graphicstate,
+                instruction_index=instruction_index
             )
         else:
             textstate.linematrix = self.render_string_horizontal(
@@ -147,6 +150,7 @@ class PDFTextDevice(PDFDevice):
                 dxscale,
                 ncs,
                 graphicstate,
+                instruction_index=instruction_index
             )
 
     def render_string_horizontal(
@@ -163,6 +167,7 @@ class PDFTextDevice(PDFDevice):
         dxscale: float,
         ncs: PDFColorSpace,
         graphicstate: "PDFGraphicState",
+        instruction_index: int = None
     ) -> Point:
         (x, y) = pos
         needcharspace = False
@@ -183,6 +188,7 @@ class PDFTextDevice(PDFDevice):
                         cid,
                         ncs,
                         graphicstate,
+                        instruction_index=instruction_index
                     )
                     if cid == 32 and wordspace:
                         x += wordspace
@@ -207,6 +213,7 @@ class PDFTextDevice(PDFDevice):
         dxscale: float,
         ncs: PDFColorSpace,
         graphicstate: "PDFGraphicState",
+        instruction_index: int = None,
     ) -> Point:
         (x, y) = pos
         needcharspace = False
@@ -227,6 +234,7 @@ class PDFTextDevice(PDFDevice):
                         cid,
                         ncs,
                         graphicstate,
+                        instruction_index=instruction_index
                     )
                     if cid == 32 and wordspace:
                         y += wordspace
@@ -247,6 +255,7 @@ class PDFTextDevice(PDFDevice):
         cid: int,
         ncs: PDFColorSpace,
         graphicstate: "PDFGraphicState",
+        instruction_index: int = None
     ) -> float:
         return 0
 

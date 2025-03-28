@@ -243,6 +243,7 @@ class PDFLayoutAnalyzer(PDFTextDevice):
         cid: int,
         ncs: PDFColorSpace,
         graphicstate: PDFGraphicState,
+        instruction_index: int = None
     ) -> float:
         try:
             text = font.to_unichr(cid)
@@ -262,6 +263,7 @@ class PDFLayoutAnalyzer(PDFTextDevice):
             textdisp,
             ncs,
             graphicstate,
+            instruction_index=instruction_index
         )
         self.cur_item.add(item)
         return item.adv

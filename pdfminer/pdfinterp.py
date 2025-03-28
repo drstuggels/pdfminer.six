@@ -322,7 +322,7 @@ class PDFContentParser(PSStackParser[Union[PSKeyword, PDFStream]]):
     KEYWORD_ID = KWD(b"ID")
     KEYWORD_EI = KWD(b"EI")
 
-    def do_keyword(self, pos: int, token: PSKeyword) -> None:
+    def do_keyword(self, pos: int, token: PSKeyword, instruction_index: int = None) -> None:
         if token is self.KEYWORD_BI:
             # inline image within a content stream
             self.start_type(pos, "inline")
@@ -351,7 +351,7 @@ class PDFContentParser(PSStackParser[Union[PSKeyword, PDFStream]]):
                 if settings.STRICT:
                     raise
         else:
-            self.push((pos, token))
+            self.push((pos, token, instruction_index))
 
 
 PDFStackT = PSStackType[PDFStream]
@@ -869,7 +869,7 @@ class PDFPageInterpreter:
         )
         self.textstate.linematrix = (0, 0)
 
-    def do_TJ(self, seq: PDFStackT) -> None:
+    def do_TJ(self, seq: PDFStackT, instruction_index: int = None) -> None:
         """Show text, allowing individual glyph positioning"""
         if self.textstate.font is None:
             if settings.STRICT:
@@ -881,28 +881,29 @@ class PDFPageInterpreter:
             cast(PDFTextSeq, seq),
             self.ncs,
             self.graphicstate.copy(),
+            instruction_index=instruction_index
         )
 
-    def do_Tj(self, s: PDFStackT) -> None:
+    def do_Tj(self, s: PDFStackT, instruction_index: int = None) -> None:
         """Show text"""
-        self.do_TJ([s])
+        self.do_TJ([s], instruction_index)
 
-    def do__q(self, s: PDFStackT) -> None:
+    def do__q(self, s: PDFStackT, instruction_index: int = None) -> None:
         """Move to next line and show text
 
         The ' (single quote) operator.
         """
         self.do_T_a()
-        self.do_TJ([s])
+        self.do_TJ([s], instruction_index)
 
-    def do__w(self, aw: PDFStackT, ac: PDFStackT, s: PDFStackT) -> None:
+    def do__w(self, aw: PDFStackT, ac: PDFStackT, s: PDFStackT, instruction_index: int = None) -> None:
         """Set word and character spacing, move to next line, and show text
 
         The " (double quote) operator.
         """
         self.do_Tw(aw)
         self.do_Tc(ac)
-        self.do_TJ([s])
+        self.do_TJ([s], instruction_index)
 
     def do_BI(self) -> None:
         """Begin inline image object"""
@@ -999,7 +1000,12 @@ class PDFPageInterpreter:
             return
         while True:
             try:
-                (_, obj) = parser.nextobject()
+                instruction_index = None
+                execute_tuple = parser.nextobject()
+                if len(execute_tuple) == 3:
+                    (_, obj, instruction_index) = execute_tuple
+                else:
+                    (_, obj) = execute_tuple
             except PSEOF:
                 break
             if isinstance(obj, PSKeyword):
@@ -1011,11 +1017,16 @@ class PDFPageInterpreter:
                 if hasattr(self, method):
                     func = getattr(self, method)
                     nargs = func.__code__.co_argcount - 1
+                    if method in ["do_TJ", "do_Tj", "do_T_w", "do_T_q"]:
+                        nargs -= 1
                     if nargs:
                         args = self.pop(nargs)
                         log.debug("exec: %s %r", name, args)
                         if len(args) == nargs:
-                            func(*args)
+                            if method in ["do_TJ", "do_Tj", "do_T_w", "do_T_q"]:
+                                func(*args, instruction_index)
+                            else:
+                                func(*args)
                     else:
                         log.debug("exec: %s", name)
                         func()

@@ -364,8 +364,10 @@ class LTChar(LTComponent, LTText):
         textdisp: Union[float, Tuple[Optional[float], float]],
         ncs: PDFColorSpace,
         graphicstate: PDFGraphicState,
+        instruction_index: int = None
     ) -> None:
         LTText.__init__(self)
+        self.instruction_index = instruction_index
         self._text = text
         self.matrix = matrix
         self.fontname = font.fontname

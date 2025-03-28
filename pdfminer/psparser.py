@@ -543,6 +543,7 @@ class PSStackParser(PSBaseParser, Generic[ExtraT]):
         self.curtype: Optional[str] = None
         self.curstack: List[PSStackEntry[ExtraT]] = []
         self.results: List[PSStackEntry[ExtraT]] = []
+        self.instruction_index = 0
 
     def seek(self, pos: int) -> None:
         PSBaseParser.seek(self, pos)
@@ -581,7 +582,7 @@ class PSStackParser(PSBaseParser, Generic[ExtraT]):
         log.debug("end_type: pos=%r, type=%r, objs=%r", pos, type, objs)
         return (pos, objs)
 
-    def do_keyword(self, pos: int, token: PSKeyword) -> None:
+    def do_keyword(self, pos: int, token: PSKeyword, instruction_index: int = None) -> None:
         pass
 
     def nextobject(self) -> PSStackEntry[ExtraT]:
@@ -643,7 +644,8 @@ class PSStackParser(PSBaseParser, Generic[ExtraT]):
                     token,
                     self.curstack,
                 )
-                self.do_keyword(pos, token)
+                self.do_keyword(pos, token, self.instruction_index)
+                self.instruction_index += 1
             else:
                 log.error(
                     "unknown token: pos=%r, token=%r, stack=%r",
